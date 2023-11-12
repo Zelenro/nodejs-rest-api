@@ -1,25 +1,82 @@
-const express = require('express')
+import express from 'express';
+import {
+	contactAddSchema,
+	contactUpdateSchema,
+} from '../../schemas/contactAddSchema.js';
+import contactService from '../../models/contacts.js';
+import { HttpError } from '../../helpers/index.js';
+import isEmptyBody from '../../middleware/middleware.js';
 
-const router = express.Router()
+const contactsRouter = express.Router();
 
-router.get('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+contactsRouter.get('/', async (req, res, next) => {
+	try {
+		const result = await contactService.listContacts();
+		return res.status(200).json(result);
+	} catch (error) {
+		next(error);
+	}
+});
 
-router.get('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+contactsRouter.get('/:contactId', async (req, res, next) => {
+	try {
+		const result = await contactService.getById(req.params.contactId);
+		if (result === null) {
+			throw HttpError(404, `Contact with id${req.params.contactId} not found`);
+		}
+		return res.status(200).json(result);
+	} catch (error) {
+		next(error);
+	}
+});
 
-router.post('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+contactsRouter.post('/', isEmptyBody, async (req, res, next) => {
+	try {
+		const { error } = contactAddSchema.validate(req.body);
+		if (error) {
+			throw HttpError(
+				400,
+				`Missing required ${error.details[0].context.label} field!`
+			);
+		}
+		const result = await contactService.addContact(req.body);
+		res.status(201).json(result);
+	} catch (error) {
+		next(error);
+	}
+});
 
-router.delete('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+contactsRouter.put('/:contactId', isEmptyBody, async (req, res, next) => {
+	try {
+		const { body } = req;
+		if (!body || Object.keys(body).length === 0) {
+			throw HttpError(400, 'Missing fields');
+		}
+		const { error } = contactUpdateSchema.validate(req.body);
+		if (error) {
+			throw HttpError(
+				400,
+				`Invalid field value ${error.details[0].context.label}!`
+			);
+		}
 
-router.put('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
+		const result = await contactService.updateContact(
+			req.params.contactId,
+			req.body
+		);
+		res.status(200).json({ result, message: 'Contact update' });
+	} catch (error) {
+		next(error);
+	}
+});
 
-module.exports = router
+contactsRouter.delete('/:contactId', async (req, res, next) => {
+	try {
+		const result = await contactService.removeContact(req.params.contactId);
+		res.status(200).json({ result, message: 'Contact deleted' });
+	} catch (error) {
+		next(error);
+	}
+});
+
+export default contactsRouter;
