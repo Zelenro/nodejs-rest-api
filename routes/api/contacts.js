@@ -12,7 +12,7 @@ const contactsRouter = express.Router();
 contactsRouter.get('/', async (req, res, next) => {
   try {
     const result = await contactService.listContacts();
-    return res.status(200).json(result);
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -24,7 +24,7 @@ contactsRouter.get('/:contactId', async (req, res, next) => {
     if (result === null) {
       throw HttpError(404, `Not found`);
     }
-    return res.status(200).json(result);
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -34,7 +34,7 @@ contactsRouter.post('/', isEmptyBody, async (req, res, next) => {
   try {
     const { error } = contactAddSchema.validate(req.body);
     if (error) {
-      throw HttpError(400, `missing required name field`);
+      throw HttpError(400, error.message);
     }
     const result = await contactService.addContact(req.body);
     res.status(201).json(result);
@@ -48,17 +48,14 @@ contactsRouter.put('/:contactId', isEmptyBody, async (req, res, next) => {
     const { body } = req;
     const { error } = contactUpdateSchema.validate(req.body);
     if (error) {
-      throw HttpError(
-        400,
-        `Invalid field value ${error.details[0].context.label}!`
-      );
+      throw HttpError(400, error.message);
     }
 
     const result = await contactService.updateContact(
       req.params.contactId,
       req.body
     );
-    res.status(200).json({ result });
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -67,7 +64,7 @@ contactsRouter.put('/:contactId', isEmptyBody, async (req, res, next) => {
 contactsRouter.delete('/:contactId', async (req, res, next) => {
   try {
     const result = await contactService.removeContact(req.params.contactId);
-    res.status(200).json({ message: 'contact deleted' });
+    res.status(200).json({ message: 'Contact deleted!' });
   } catch (error) {
     next(error);
   }
