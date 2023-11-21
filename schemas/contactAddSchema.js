@@ -23,9 +23,7 @@ export const contactAddSchema = Joi.object({
       'string.pattern.base':
         'Must contain only numbers, brackets, spaces and dashes. Example: 000-00-00 or (000) 00 00.',
     }),
-  favorite: Joi.boolean()
-    .required()
-    .messages({ 'any.required': 'Missing required favorite field' }),
+  favorite: Joi.boolean(),
 });
 
 export const contactUpdateSchema = Joi.object({

@@ -36,8 +36,11 @@ const updateContact = async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await Contact.findByIdAndUpdate(id, req.body);
+    if (!result) {
+      res.status(404).json({ message: 'Not found' });
+    }
     req.params.id, req.body;
-    res.status(201).json(result);
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -71,6 +74,9 @@ const updateStatusContact = async (req, res, next) => {
 const removeContact = async (req, res, next) => {
   try {
     const result = await Contact.findByIdAndDelete(req.params.id);
+    if (!result) {
+      res.status(404).json({ message: 'Not found' });
+    }
     res.status(200).json({ message: 'Contact deleted!' });
   } catch (error) {
     next(error);
