@@ -13,13 +13,16 @@ import {
 const contactsRouter = express.Router();
 
 contactsRouter.get('/', contactsController.listContacts);
+
 contactsRouter.get('/:id', isValidId, contactsController.getById);
+
 contactsRouter.post(
   '/',
   isEmptyBody,
   validateBody(contactAddSchema),
   contactsController.addContact
 );
+
 contactsRouter.put(
   '/:id',
   isValidId,
