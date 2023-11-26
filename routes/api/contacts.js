@@ -1,7 +1,10 @@
 import express from 'express';
-import isEmptyBody from '../../middleware/middleware.js';
-import isValidId from '../../middleware/isValidId.js';
-import isEmptyFavorite from '../../middleware/isEmptyFavorite.js';
+import {
+  authenticate,
+  isEmptyBody,
+  isEmptyFavorite,
+  isValidId,
+} from '../../middleware/index.js';
 import validateBody from '../../decorators/validateBody.js';
 import contactsController from '../../controllers/contacts-controller.js';
 import {
@@ -12,17 +15,15 @@ import {
 
 const contactsRouter = express.Router();
 
+contactsRouter.use(authenticate);
 contactsRouter.get('/', contactsController.listContacts);
-
 contactsRouter.get('/:id', isValidId, contactsController.getById);
-
 contactsRouter.post(
   '/',
   isEmptyBody,
   validateBody(contactAddSchema),
   contactsController.addContact
 );
-
 contactsRouter.put(
   '/:id',
   isValidId,
@@ -30,7 +31,6 @@ contactsRouter.put(
   validateBody(contactUpdateSchema),
   contactsController.updateContact
 );
-
 contactsRouter.patch(
   '/:id/favorite',
   isValidId,
@@ -38,7 +38,5 @@ contactsRouter.patch(
   validateBody(contactFavoriteSchema),
   contactsController.updateStatusContact
 );
-
 contactsRouter.delete('/:id', isValidId, contactsController.removeContact);
-
 export default contactsRouter;
