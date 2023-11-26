@@ -5,13 +5,26 @@ import ctrlWrapper from '../decorators/ctrlWrapper.js';
 const listContacts = async (req, res) => {
   try {
     const { _id: owner } = req.user;
-    const { page = 1, limit = 5 } = req.query;
+    const { page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
-    const result = await Contact.find({ owner }, '-createdAt -updateAt', {
+
+    const totalCount = await Contact.countDocuments({ owner });
+
+    const lastPageContacts = totalCount % limit;
+    const dynamicLimit =
+      page < Math.ceil(totalCount / limit) ? limit : lastPageContacts;
+
+    const result = await Contact.find({ owner }, '-createdAt -updatedAt', {
       skip,
-      limit,
+      limit: dynamicLimit,
     }).populate('owner', 'email subscription');
-    res.status(200).json(result);
+
+    res.status(200).json({
+      totalCount,
+      page,
+      contactsPerPage: dynamicLimit,
+      result,
+    });
   } catch (error) {
     next(error);
   }
