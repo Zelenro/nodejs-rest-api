@@ -17,22 +17,33 @@ const { JWT_SECRET } = process.env;
 
 const signup = async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (user) {
-    throw HttpError(409, 'Email already exist');
+  let avatarURL = req.file;
+  if (!avatarURL) {
+    avatarURL =
+      avatarURL || gravatar.url(email, { s: '250', r: 'pg', d: 'mm' });
   }
-  const hashPassword = await bcrypt.hash(password, 10);
-  const avatarURL = gravatar.url(email, { s: '250', r: 'pg', d: 'mm' });
-  const newUser = await User.create({
-    ...req.body,
-    password: hashPassword,
-  });
-  res.status(201).json({
-    user: {
-      email: newUser.email,
-      subscription: newUser.subscription,
-    },
-  });
+  try {
+    const user = await User.findOne({ email });
+    if (user) {
+      throw HttpError(409, 'Email already exist');
+    }
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+      ...req.body,
+      password: hashPassword,
+      avatarURL,
+    });
+    res.status(201).json({
+      user: {
+        email: newUser.email,
+        subscription: newUser.subscription,
+        avatarURL: avatarURL,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const processImage = async (inputPath, outputPath, width, height) => {
@@ -48,6 +59,9 @@ const processImage = async (inputPath, outputPath, width, height) => {
 const updateAvatar = async (req, res, next) => {
   const { authorization } = req.headers;
   const [bearer, token] = authorization.split(' ');
+  if (!req.file) {
+    throw HttpError(400, 'File is missing');
+  }
   try {
     const { id } = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(id);
@@ -57,7 +71,7 @@ const updateAvatar = async (req, res, next) => {
     const { path: oldPath, filename } = req.file;
     const newPath = path.join(avatarsPath, filename);
     await fs.rename(oldPath, newPath);
-    await processImage(newPath, newPath, 250, Jimp.AUTO);
+    await processImage(newPath, newPath, 250, 250);
     const avatarURL = path.join('public', 'avatars', filename);
     const result = await User.findByIdAndUpdate(id, { avatarURL });
     res.status(200).json({ avatarURL });

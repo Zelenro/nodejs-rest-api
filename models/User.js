@@ -9,13 +9,13 @@ const userSchema = new Schema(
     password: {
       type: String,
       minLength: 6,
-      require: [true, 'Set password for user'],
+      required: [true, 'Set password for user'],
     },
     email: {
       type: String,
       match: emailRegexp,
       unique: true,
-      require: [true, 'Email is required'],
+      required: [true, 'Email is required'],
     },
     subscription: {
       type: String,
@@ -24,7 +24,6 @@ const userSchema = new Schema(
     },
     avatarURL: {
       type: String,
-      required: true,
     },
     token: {
       type: String,
