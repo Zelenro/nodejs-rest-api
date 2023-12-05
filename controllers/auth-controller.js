@@ -72,7 +72,7 @@ const updateAvatar = async (req, res, next) => {
     const newPath = path.join(avatarsPath, filename);
     await fs.rename(oldPath, newPath);
     await processImage(newPath, newPath, 250, 250);
-    const avatarURL = path.join('public', 'avatars', filename);
+    const avatarURL = path.join('avatars', filename);
     const result = await User.findByIdAndUpdate(id, { avatarURL });
     res.status(200).json({ avatarURL });
   } catch (error) {
